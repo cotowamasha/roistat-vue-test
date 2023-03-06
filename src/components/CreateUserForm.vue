@@ -21,9 +21,9 @@
       required
     />
     <select-component
-      v-if="users.length"
+      v-if="usersApp().length"
       v-model="parent_phone"
-      :values="users"
+      :values="usersApp()"
       :options="{
         label: 'name',
         code: 'phone'
@@ -36,9 +36,7 @@
 </template>
 
 <script>
-import { mapState, mapMutations } from "vuex";
 import InputComponent from "./Input.vue";
-import SelectComponent from "./Select.vue";
 export default {
   components: { InputComponent, SelectComponent: () => import("./Select.vue") },
   name: "CreateUserForm",
@@ -53,27 +51,24 @@ export default {
       }
     };
   },
-  computed: {
-    ...mapState(["users"])
-  },
+  inject: ['usersApp'],
   methods: {
-    ...mapMutations(["CREATE_USER"]),
     submit() {
       if (this.validate()) {
         const { name, phone, parent_phone } = this;
-        this.CREATE_USER({ name, phone, parent_phone });
+        this.$emit("create", { name, phone, parent_phone });
         this.$emit("extra-emit");
       }
     },
     validate() {
-      const { phone, errors, users } = this;
+      const { phone, errors, usersApp } = this;
 
-      const isFindDuplicate = users.find(element => element.phone === phone);
+      const isFindDuplicate = usersApp().find(element => element.phone === phone);
       if (isFindDuplicate) {
         errors.phone = "Пользователь с таким номером уже сужествует";
         return false;
       }
-      
+
       return true;
     }
   }

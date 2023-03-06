@@ -11,7 +11,7 @@
           Добавить
         </button>
         <!-- <button
-          v-on:click="CLEAR_STORAGE"
+          v-on:click="clear"
           class="btn-common btn-add"
           type="button"
         >
@@ -21,33 +21,74 @@
       </div>
     </div>
     <modal-component v-if="isOpenModal" v-on:close="isOpenModal = false">
-      <create-user-form v-on:extra-emit="isOpenModal = false" />
+      <create-user-form
+        v-on:create="createUsers"
+        v-on:extra-emit="isOpenModal = false"
+      />
     </modal-component>
   </div>
 </template>
 
 <script>
-import { mapMutations } from "vuex";
-import CreateUserForm from './components/CreateUserForm.vue';
+import CreateUserForm from "./components/CreateUserForm.vue";
 import TableComponent from "./components/Table.vue";
+
+const storageKey = "users";
+
 export default {
   name: "App",
   components: {
     TableComponent,
     CreateUserForm,
-    ModalComponent: () => import("./components/Modal.vue"),
+    ModalComponent: () => import("./components/Modal.vue")
   },
   data() {
     return {
-      isOpenModal: false
+      isOpenModal: false,
+      users: []
+    };
+  },
+  provide() {
+    return {
+      usersApp: () => this.users
     };
   },
   created() {
-    this.UPLOAD_STORAGE_USERS();
+    this.upload();
   },
   methods: {
-    ...mapMutations(["CLEAR_STORAGE", "UPLOAD_STORAGE_USERS"])
-  },
+    // ...mapMutations(["CLEAR_STORAGE", "UPLOAD_STORAGE_USERS"]),
+    upload() {
+      const items = localStorage.getItem(storageKey);
+      this.users = items ? JSON.parse(items) : [];
+    },
+    createUsers({ name, phone, parent_phone }) {
+      const newUser = {
+        name,
+        phone,
+        parent_phone,
+        children: []
+      };
+
+      let isFindParent;
+      if (parent_phone)
+        isFindParent = this.users.find(
+          element => element.phone === parent_phone
+        );
+      if (isFindParent) isFindParent.children.push({ name, phone });
+
+      this.users.push({
+        ...newUser,
+        ...{ order: isFindParent ? isFindParent.order + 1 : 1 }
+      });
+
+      localStorage.setItem(storageKey, JSON.stringify(this.users));
+    },
+    clear() {
+      localStorage.clear();
+      this.users = [];
+    }
+  }
 };
 </script>
 

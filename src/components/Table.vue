@@ -43,12 +43,11 @@
         </div>
       </div>
     </div>
-    <table-row v-if="users.length" :users="users" />
+    <table-row v-if="usersApp().length" :users="usersApp()" />
   </section>
 </template>
 
 <script>
-import { mapState } from "vuex";
 export default {
   components: {
     TableRow: () => import("./TableRow.vue")
@@ -59,9 +58,7 @@ export default {
       sortBy: null
     };
   },
-  computed: {
-    ...mapState(["users"])
-  },
+  inject: ['usersApp'],
   provide() {
     return {
       sortBy: () => this.sortBy
